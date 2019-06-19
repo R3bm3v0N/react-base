@@ -1,12 +1,14 @@
 import * as React from "react";
 import update from 'immutability-helper';
-import { Row, Col, Table, Tag, Button, List, Switch, message, Modal, Popconfirm, Skeleton } from 'antd';
+import { Row, Col, Table, Tag, Button, List, Switch, message, Modal, Popconfirm, Skeleton, Pagination } from 'antd';
 import moment from 'moment';
 
 import api from '../../services'
 import connect from './connect';
 import SearchForm from './components/SearchForm';
 import AddNewForm from './components/AddNewForm';
+import './index.css';
+
 const {CopyToClipboard} = require('react-copy-to-clipboard');
 
 
@@ -16,22 +18,23 @@ class License extends React.Component<any> {
       visible: false
     },
     table: {
-      pagination: {
-        pageSize: 10
+      meta: {
+        page: {
+          current: 1,
+          total: 0,
+          size: 5,
+        },
+        sort: {
+          column: undefined,
+          direction: undefined
+        },
+        filters: {}
       },
       data: [] as any[],
       fetching: false,
       expandedRowKeys: new Set<string>(),
       fetchingRowKeys: new Set<string>(),
       visibleRowKeys: new Set<string>(),
-      query: {
-        paging: {
-          limit: 10,
-          page: 1,
-          sort: null
-        },
-        filters: {}
-      }
     }
   };
 
@@ -42,10 +45,19 @@ class License extends React.Component<any> {
         expandedRowKeys: { $set: new Set<string>() }
       }
     }), async () => {
-      let data = await api.license.fetch(this.state.table.query);
+      let payload = await api.license.fetch({
+        ...this.state.table.meta
+      });
       this.setState(update(this.state, {
         table: {
-          data: { $set: data },
+          meta: {
+            page: {
+              total: {
+                $set: payload.meta.total
+              }
+            }
+          },
+          data: { $set: payload.data },
           fetching: { $set: false }
         }
       }));
@@ -239,27 +251,72 @@ class License extends React.Component<any> {
   };
 
   handleTableChange = (pagination: any, filters: any, sorter: any) => {
-    const pager = { ...this.state.table.pagination } as any;
-    pager.current = pagination.current;
-    this.setState({
-      pagination: pager,
-      query : {
-        paging: {
-          limit: pagination.pageSize,
-          page: pagination.current,
-          sort: (sorter.order === 'ascend' ? '' : '-') + sorter.field
-        },
-        filters,
+    // const { page, sort, filters } = this.state.table.meta;
+    this.setState(update(this.state, {
+      table: {
+        meta: {
+          page: {
+            $set: {
+              current: pagination.current,
+              size: pagination.pageSize,
+              total: pagination.total
+            }
+          },
+          sort: {
+            $set: sorter
+          },
+          filters: {
+            $set: filters
+          }
+        }
       }
-    }, this.fetchTableData);
+    }))
+  //   this.setState({
+  //     query : {
+  //       paging: {
+  //         limit: pagination.pageSize,
+  //         page: pagination.current,
+  //         sort: (sorter.order === 'ascend' ? '' : '-') + sorter.field
+  //       },
+  //       filters,
+  //     }
+  //   }, this.fetchTableData);
   };
+
+  handleOnFilterChangePrepare = () => {
+    this.setState(update(this.state, {
+      table: {
+        fetching: {
+          $set: true
+        }
+      }
+    }));
+  }
 
   handleOnFilterChange = (filters: any) => {
     this.setState(update(this.state, {
       table: {
-        query: {
+        meta: {
           filters: {
             $set: filters
+          }
+        }
+      }
+    }), this.fetchTableData);
+  }
+
+  handleOnPageChange = (page: number, pageSize?: number) => {
+    console.log('page', page, pageSize)
+    this.setState(update(this.state, {
+      table: {
+        meta: {
+          page: {
+            current: {
+              $set: page
+            },
+            size: {
+              $set: pageSize || 0
+            }
           }
         }
       }
@@ -274,22 +331,12 @@ class License extends React.Component<any> {
     </Col>
   </Row>
 
-  // renderTableSkeleton = () => <Row style={{ width: '100%' }}>
-  //   <Col span={4}><Skeleton active={true} loading={true} title={false} paragraph={{rows:5, width: ['80%', '80%']}}/></Col>
-  //   <Col span={4}><Skeleton active={true} loading={true} title={false} paragraph={{rows:5, width: ['80%', '80%']}}/></Col>
-  //   <Col span={4}><Skeleton active={true} loading={true} title={false} paragraph={{rows:5, width: ['80%', '80%']}}/></Col>
-  //   <Col span={4}><Skeleton active={true} loading={true} title={false} paragraph={{rows:5, width: ['80%', '80%']}}/></Col>
-  //   <Col span={4}><Skeleton active={true} loading={true} title={false} paragraph={{rows:5, width: ['80%', '80%']}}/></Col>
-  //   <Col span={4}>
-  //     <div style={{float:'right', width: '80%'}}><Skeleton active={true} loading={true} title={false} paragraph={{rows:10, width: ['100%', '100%']}}/></div>
-  //   </Col>
-  // </Row>
-
   render() {
     let insertPending = this.props.insert.status === 'pending';
     let { table, modal } = this.state;
     let rowKeys = Array.from(table.expandedRowKeys);
-    console.log('table', table)
+    let {current, size: pageSize, total} = table.meta.page;
+    // console.log('table', table)
     return (
       <Row>
         <Col span={24}>
@@ -297,13 +344,24 @@ class License extends React.Component<any> {
             <Button icon='plus' onClick={this.showModal} type="primary" style={{ marginBottom: 16, float: 'right' }}>
             新規追加
             </Button>
-            <SearchForm onFilterChange={this.handleOnFilterChange}/>
+            <SearchForm onFilterChangePrepare={this.handleOnFilterChangePrepare} onFilterChange={this.handleOnFilterChange}/>
           </Row>
           <div className="search-result-list">
             {
             <Table 
               dataSource={table.data} 
-              pagination={table.pagination}
+              pagination={{
+                current, pageSize, total,
+                // hideOnSinglePage: true,
+                position: 'both',
+                showSizeChanger: true,
+                pageSizeOptions: ['5', '10', '20', '50', '100'],
+                // showQuickJumper: true,
+                style: { width: '100%', textAlign: 'right'},
+                showTotal: (total: number, range: [number, number]) => <div>総アイテム数：{total} (表示{range.join('〜')})</div>,
+                onChange: this.handleOnPageChange,
+                onShowSizeChange: this.handleOnPageChange,
+              }}
               rowKey={record => record.key}
               loading={table.fetching}
               columns={this.meta}
@@ -311,7 +369,6 @@ class License extends React.Component<any> {
               expandedRowKeys={rowKeys}
               expandIconAsCell={false}
               expandIcon={()=><></>}
-              
               expandedRowRender={record => 
                 (record.devices && record.devices.length) 
                 ? <List

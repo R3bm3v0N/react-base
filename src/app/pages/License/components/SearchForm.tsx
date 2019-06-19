@@ -12,10 +12,9 @@ const defaultState = {
 
 class SearchForm extends React.Component<any, any> {
   state = defaultState;
-
   constructor(props: any) {
     super(props);
-    this.triggerFilter = debounce(this.triggerFilter, 500);
+    this.triggerFilterNow = debounce(this.triggerFilterNow, 500);
   }
 
   handleSearch = (e: any) => {
@@ -34,13 +33,13 @@ class SearchForm extends React.Component<any, any> {
 
   handleFilterOnChangeDateFrom = (dateFrom: any) => {
     this.setState({
-      dateFrom: dateFrom.format('Y/MM/DD')
+      dateFrom: dateFrom ? dateFrom.format('Y/MM/DD') : undefined
     }, this.triggerFilter)
   }
 
   handleFilterOnChangeDateTo = (dateTo: any) => {
     this.setState({
-      dateTo: dateTo.format('Y/MM/DD')
+      dateTo: dateTo ? dateTo.format('Y/MM/DD') : undefined
     }, this.triggerFilter)
   }
 
@@ -59,6 +58,12 @@ class SearchForm extends React.Component<any, any> {
   }
 
   triggerFilter = () => {
+    this.props.onFilterChangePrepare();
+    this.triggerFilterNow();
+  }
+
+  triggerFilterNow = () => {
+    console.log('triggerFilterNow')
     this.props.onFilterChange(this.state);
   }
 
