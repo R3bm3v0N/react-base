@@ -1,8 +1,7 @@
 import * as React from "react";
 import { Layout, Menu, Breadcrumb, Icon } from 'antd';
 
-const { SubMenu } = Menu;
-const { Header, Footer, Content, Sider } = Layout;
+const { Header, Content, Sider } = Layout;
 
 // interface Props {
 // }

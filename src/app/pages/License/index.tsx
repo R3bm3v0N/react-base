@@ -19,7 +19,7 @@ class License extends React.Component<any> {
       pagination: {
         pageSize: 10
       },
-      data: [],
+      data: [] as any[],
       fetching: false,
       expandedRowKeys: new Set<string>(),
       visibleRowKeys: new Set<string>(),
@@ -58,7 +58,7 @@ class License extends React.Component<any> {
     {
       title: 'ライセンスキー',
       dataIndex: 'key',
-      render: (text, record) => {
+      render: (text: any, record: any) => {
         let visible = this.state.table.visibleRowKeys.has(record.key);
         return (
           <>
@@ -71,7 +71,7 @@ class License extends React.Component<any> {
     {
       title: '開始日',
       dataIndex: 'created_at',
-      render: (text, record) => (
+      render: (text: any, record: any) => (
         <>
           {moment(text).format('Y/MM/DD')}
         </>
@@ -81,7 +81,7 @@ class License extends React.Component<any> {
     {
       title: '有効期限',
       dataIndex: 'expire',
-      render: (text, record) => (
+      render: (text: any, record: any) => (
         <>
           {moment(text).format('Y/MM/DD')}
         </>
@@ -91,10 +91,10 @@ class License extends React.Component<any> {
     {
       title: 'お客様名',
       dataIndex: 'name',
-      render: (text, record) => (
+      render: (text: any, record: any) => (
         <>
           <Tag color={record.type === 1 ? 'geekblue' : 'green'}>
-            {{1:'個人', 2:'法人'}[record.type]}
+            {({1:'個人', 2:'法人'} as any) [record.type]}
           </Tag>
           {text}
         </>
@@ -104,7 +104,7 @@ class License extends React.Component<any> {
     {
       title: 'デバイス',
       dataIndex: 'device_count',
-      render: (text, record) => 
+      render: (text: any, record: any) => 
       <>
         {record.device_count} 
         件　
@@ -115,7 +115,7 @@ class License extends React.Component<any> {
     {
       title: '状態',
       dataIndex: 'enabled',
-      render: (text, record) => (
+      render: (text: any, record: any) => (
         <Popconfirm title="Are you sure？" okText="Yes" cancelText="No" onConfirm={()=>{
         }}>
           <Switch size="small" checked={record.enabled}/>
@@ -124,7 +124,7 @@ class License extends React.Component<any> {
     },
   ];
 
-  handleExpand = async (record) => {
+  handleExpand = async (record: any) => {
     let oldExpands = this.state.table.expandedRowKeys as Set<string>;
     let collapsed = oldExpands.has(record.key);
     collapsed 
@@ -161,7 +161,7 @@ class License extends React.Component<any> {
     }
   }
 
-  handleToggleKeyVisible = (record) => {
+  handleToggleKeyVisible = (record: any) => {
     let oldVisibles = this.state.table.visibleRowKeys as Set<string>;
     oldVisibles.has(record.key) 
       ? oldVisibles.delete(record.key)
@@ -199,7 +199,7 @@ class License extends React.Component<any> {
   addNewForm = React.createRef<any>();
   handleCreate = () => {
     const form = this.addNewForm;
-    form.current.validateFields((err, values) => {
+    form.current.validateFields((err: any, values: any) => {
       if (err) {
         return;
       }
@@ -214,7 +214,7 @@ class License extends React.Component<any> {
   //   this.formRef = formRef;
   // };
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps: any) {
     const form = this.addNewForm;
     if(prevProps.insert.status === 'pending') {
       if(this.props.insert.status === 'success') {
@@ -227,7 +227,7 @@ class License extends React.Component<any> {
     }
   };
 
-  handleTableChange = (pagination, filters, sorter) => {
+  handleTableChange = (pagination: any, filters: any, sorter: any) => {
     const pager = { ...this.state.table.pagination } as any;
     pager.current = pagination.current;
     this.setState({
@@ -243,7 +243,7 @@ class License extends React.Component<any> {
     }, this.fetchTableData);
   };
 
-  handleOnFilterChange = (filters) => {
+  handleOnFilterChange = (filters: any) => {
     this.setState(update(this.state, {
       table: {
         query: {

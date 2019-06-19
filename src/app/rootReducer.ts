@@ -8,9 +8,9 @@ import Cookies from 'universal-cookie';
 
 
 export type SessionState = {
-    jwt: string,
-    email: string,
-    userDisplayName: string
+    jwt?: string,
+    email?: string,
+    userDisplayName?: string
 }
 export type State = {
   session: SessionState,
@@ -21,9 +21,9 @@ export type State = {
 }
 
 const sessionDefaultState : SessionState = {
-  jwt: null,
-  email: null,
-  userDisplayName: null
+  jwt: undefined,
+  email: undefined,
+  userDisplayName: undefined
 }
 
 const sessionReducer = createReducer(sessionDefaultState, (handleAction) => [

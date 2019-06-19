@@ -1,5 +1,5 @@
 import * as React from "react";
-import { BrowserRouter as Router, Link, Switch } from "react-router-dom";
+import { Link } from "react-router-dom";
 import './index.less';
 
 class NotFound extends React.Component<any> {

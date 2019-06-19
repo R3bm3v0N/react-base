@@ -1,7 +1,4 @@
 import * as React from "react";
-import { Layout } from 'antd';
-
-const { Header, Footer, Sider, Content } = Layout;
 
 interface Props {
 }

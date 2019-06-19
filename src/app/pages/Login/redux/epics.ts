@@ -5,8 +5,8 @@ import { loginSuccess, loginError } from './actions';
 
 export default {
   [`${types.LOGIN}_START`]: {
-    api: params => api.user.login(params.username, params.password),
-    success: payload => loginSuccess(payload),
-    error: error => loginError(error)
+    api: (params: any) => api.user.login(params.username, params.password),
+    success: (payload: any) => loginSuccess(payload),
+    error: (error: any) => loginError(error)
   }
 }

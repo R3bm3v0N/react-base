@@ -1,6 +1,6 @@
 import http from './http';
 
-export const login = async (username, password) => {
+export const login = async (username: any, password: any) => {
   const response = await http.post('/login', {
     email:username,
     password
@@ -8,7 +8,7 @@ export const login = async (username, password) => {
   return response;
 }
 
-export const search = async (keyword) => {
+export const search = async (keyword: any) => {
   const response = await http.get('/user', {
     params: {
       keyword,
@@ -18,7 +18,7 @@ export const search = async (keyword) => {
   return response.data.payload;
 }
 
-export const checkEmail = async (email) => {
+export const checkEmail = async (email: any) => {
   const response = await http.get('/user/check-email-exists', {
     params: {
       email,

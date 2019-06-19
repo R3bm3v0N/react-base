@@ -9,7 +9,7 @@ const {
 } = actions;
 
 export type State = {
-  status: string,
+  status?: string,
   error?: {
     code: string,
     message: string,
@@ -17,18 +17,18 @@ export type State = {
 }
 
 const defaultState: State = {
-  status: null,
-  error: null
+  status: undefined,
+  error: undefined
 }
 
 export default createReducer(defaultState, (handleAction) => [
   handleAction(login, (state, action : any) => update(state, {
     status: { $set: 'pending'},
-    error: { $set: null}
+    error: { $set: undefined}
   })),
   handleAction(loginSuccess, (state, action : any) => update(state, {
     status: { $set: 'success'},
-    error: { $set: null}
+    error: { $set: undefined}
   })),
   handleAction(loginError, (state, action : any) => update(state, {
     status: { $set: 'error'},

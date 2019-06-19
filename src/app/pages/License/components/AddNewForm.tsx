@@ -8,20 +8,20 @@ const { RangePicker } = DatePicker;
 
 const AddNewForm = Form.create<any>({ name: 'form_in_modal' })(
   // eslint-disable-next-line
-  class extends React.Component<any> {
+  class extends React.Component<any,any> {
     form = React.createRef<any>();
 
     state = {
       newKeyPending: false,
-      customers: [],
+      customers: [] as any[],
       customerId: undefined,
       customerSearchPending: false,
       customerEmailDataSource: [],
-      customerEmailValidateStatus: null,
-      customerEmailValidateError: ''
+      customerEmailValidateStatus: undefined,
+      customerEmailValidateError: undefined
     };
 
-    constructor(props) {
+    constructor(props: any) {
       super(props);
       this.checkCustomerEmail = debounce(this.checkCustomerEmail, 800);
     }
@@ -49,7 +49,7 @@ const AddNewForm = Form.create<any>({ name: 'form_in_modal' })(
       })
     };
 
-    handleLoadCustomer = (keyword) => {
+    handleLoadCustomer = (keyword: string) => {
       this.setState({
         customerSearchPending: true
       }, async () => {
@@ -67,14 +67,14 @@ const AddNewForm = Form.create<any>({ name: 'form_in_modal' })(
       })
     }
 
-    handleCustomerChange = (customerId) => {
+    handleCustomerChange = (customerId: number) => {
       console.log(customerId)
       this.setState({
         customerId
       })
     }
 
-    handleChangeCustomerEmail = (value) => {
+    handleChangeCustomerEmail = (value: any) => {
       this.setState({
         customerEmailDataSource:
           !value || value.indexOf('@') >= 0
@@ -98,7 +98,7 @@ const AddNewForm = Form.create<any>({ name: 'form_in_modal' })(
       });
     }
 
-    checkCustomerEmail = (email) => {
+    checkCustomerEmail = (email: string) => {
       // customerEmailValidateStatus: value ? 'validating' : '',
       
       try {
@@ -132,7 +132,7 @@ const AddNewForm = Form.create<any>({ name: 'form_in_modal' })(
         {d.name} - <Typography.Text type="secondary">{d.email}</Typography.Text>
         </Select.Option>
       );
-      options.push(<Select.Option key={null}><Icon type="plus" style={{marginRight: 5}}/>新規追加</Select.Option>);
+      options.push(<Select.Option key={'null'}><Icon type="plus" style={{marginRight: 5}}/>新規追加</Select.Option>);
 
 
       return (

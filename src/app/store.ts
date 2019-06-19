@@ -14,7 +14,7 @@ const store = createStore(
   applyMiddleware(...[
     epicMiddleware,
     configs.debug && logger
-  ].filter(v=>v))
+  ].filter(v=>v) as any[])
 );
 epicMiddleware.run(rootEpic);
 

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Form, Row, Col, Radio, Button, Icon, DatePicker, Input } from 'antd';
+import { Form, Radio, Button, Icon, DatePicker, Input } from 'antd';
 import debounce from 'lodash/debounce';
 
 const defaultState = {
@@ -13,45 +13,45 @@ const defaultState = {
 class AdvancedSearchForm extends React.Component<any, any> {
   state = defaultState;
 
-  constructor(props) {
+  constructor(props: any) {
     super(props);
     this.triggerFilter = debounce(this.triggerFilter, 800);
   }
 
-  handleSearch = e => {
+  handleSearch = (e: any) => {
     e.preventDefault();
-    this.props.form.validateFields((err, values) => {
+    this.props.form.validateFields((err : any, values: any) => {
       console.log('Received values of form: ', values);
     });
   };
 
-  handleFilterOnChangeName = (e) => {
+  handleFilterOnChangeName = (e: any) => {
     const { value } = e.target;
     this.setState({
       name: value
     }, this.triggerFilter)
   }
 
-  handleFilterOnChangeDateFrom = (dateFrom) => {
+  handleFilterOnChangeDateFrom = (dateFrom: any) => {
     this.setState({
       dateFrom: dateFrom.format('Y/MM/DD')
     }, this.triggerFilter)
   }
 
-  handleFilterOnChangeDateTo = (dateTo) => {
+  handleFilterOnChangeDateTo = (dateTo: any) => {
     this.setState({
       dateTo: dateTo.format('Y/MM/DD')
     }, this.triggerFilter)
   }
 
-  handleFilterOnChangeType = (e) => {
+  handleFilterOnChangeType = (e: any) => {
     const { value } = e.target;
     this.setState({
       type: value
     }, this.triggerFilter)
   }
 
-  handleFilterOnChangeEnable = (e) => {
+  handleFilterOnChangeEnable = (e: any) => {
     const { value } = e.target;
     this.setState({
       enabled: value

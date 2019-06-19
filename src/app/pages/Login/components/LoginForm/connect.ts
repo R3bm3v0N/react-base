@@ -4,12 +4,12 @@ import { bindActionCreators } from 'redux';
 
 import {State} from '../../../../rootReducer';
 
-const mapStateToProps = (state : State, ownProps) => ({
+const mapStateToProps = (state : State, ownProps: any) => ({
   loginPending: state.page.login.status === 'pending',
   error: state.page.login.error
 })
 
-const mapDispatchToProps = dispatch => bindActionCreators(userActions, dispatch);
+const mapDispatchToProps = (dispatch: any) => bindActionCreators(userActions, dispatch);
 
 export default connect(
   mapStateToProps,

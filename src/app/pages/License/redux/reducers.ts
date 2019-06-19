@@ -13,14 +13,14 @@ const {
 
 export type State = {
   fetch?: {
-    status: string,
+    status?: string,
     error?: {
       code: string,
       message: string
     }
   },
   insert?: {
-    status: string,
+    status?: string,
     error?: {
       code: string,
       message: string
@@ -30,10 +30,10 @@ export type State = {
 
 const defaultState: State = {
   fetch: {
-    status: null,
+    status: undefined,
   },
   insert: {
-    status: null,
+    status: undefined,
   }
 }
 

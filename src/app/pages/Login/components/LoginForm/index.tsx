@@ -4,9 +4,9 @@ import connect from './connect';
 import './styles.css';
 
 class NormalLoginForm extends React.Component<any> {
-  handleSubmit = e => {
+  handleSubmit = (e: any) => {
     e.preventDefault();
-    this.props.form.validateFields((err, values) => {
+    this.props.form.validateFields((err: any, values: any) => {
       if (!err) {
         console.log('Received values of form: ', values);
         let {username, password} = values;

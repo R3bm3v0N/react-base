@@ -2,9 +2,9 @@ import { of, from } from 'rxjs';
 import { map, mergeMap, catchError } from "rxjs/operators";
 import { ofType } from "redux-observable";
 
-export const loadEpics = (loadedEpic) => {
+export const loadEpics = (loadedEpic: any) => {
   let actionTypes = Object.keys(loadedEpic.default);
-  return actionTypes.map(actionType => action$ => action$.pipe(
+  return actionTypes.map(actionType => (action$: any) => action$.pipe(
     ofType(actionType),
     mergeMap((action : any) => from(loadedEpic.default[actionType].api(action.payload)).pipe(
       // map(response => {console.log(response); return response}),
