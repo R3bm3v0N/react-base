@@ -3,19 +3,19 @@ import { Form, Radio, Button, Icon, DatePicker, Input } from 'antd';
 import debounce from 'lodash/debounce';
 
 const defaultState = {
-  name: null,
-  dateFrom: null,
-  dateTo: null,
-  type: null,
-  enabled: null
+  name: undefined,
+  dateFrom: undefined,
+  dateTo: undefined,
+  type: undefined,
+  enabled: undefined
 };
 
-class AdvancedSearchForm extends React.Component<any, any> {
+class SearchForm extends React.Component<any, any> {
   state = defaultState;
 
   constructor(props: any) {
     super(props);
-    this.triggerFilter = debounce(this.triggerFilter, 800);
+    this.triggerFilter = debounce(this.triggerFilter, 500);
   }
 
   handleSearch = (e: any) => {
@@ -86,10 +86,10 @@ class AdvancedSearchForm extends React.Component<any, any> {
 
         <Form.Item>
         {getFieldDecorator('type', {
-          initialValue: null
+          initialValue: undefined
         })(
           <Radio.Group onChange={this.handleFilterOnChangeType}>
-            <Radio.Button value={null}>全て</Radio.Button>
+            <Radio.Button value={undefined}>全て</Radio.Button>
             <Radio.Button value={1}>個人</Radio.Button>
             <Radio.Button value={2}>法人</Radio.Button>
           </Radio.Group>
@@ -98,12 +98,12 @@ class AdvancedSearchForm extends React.Component<any, any> {
 
         <Form.Item>
         {getFieldDecorator('enabled', {
-          initialValue: null
+          initialValue: undefined
         })(
           <Radio.Group onChange={this.handleFilterOnChangeEnable}>
-            <Radio.Button value={null}>全て</Radio.Button>
+            <Radio.Button value={undefined}>全て</Radio.Button>
             <Radio.Button value={1}>有効</Radio.Button>
-            <Radio.Button value={2}>無効</Radio.Button>
+            <Radio.Button value={0}>無効</Radio.Button>
           </Radio.Group>
           )}
         </Form.Item>
@@ -117,4 +117,4 @@ class AdvancedSearchForm extends React.Component<any, any> {
   }
 }
 
-export default Form.create<any>({ name: 'advanced_search' })(AdvancedSearchForm);
+export default Form.create<any>({ name: 'advanced_search' })(SearchForm);

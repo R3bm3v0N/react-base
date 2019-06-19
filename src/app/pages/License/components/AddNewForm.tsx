@@ -198,7 +198,10 @@ const AddNewForm = Form.create<any>({ name: 'form_in_modal' })(
             help={this.state.customerEmailValidateError}
             >
               {getFieldDecorator('customerEmail', {
-                rules: [{ required: true, message: '入力してください。' }],
+                rules: [
+                  { required: true, message: '入力してください。' },
+                  { required: true, message: '入力してください。' },
+                ],
               })(<AutoComplete
                 disabled={insertPending} 
                 dataSource={this.state.customerEmailDataSource}

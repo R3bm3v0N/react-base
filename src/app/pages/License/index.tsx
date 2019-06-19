@@ -1,13 +1,13 @@
 import * as React from "react";
 import update from 'immutability-helper';
-import { Row, Col, Table, Tag, Button, List, Icon, Switch, message, Modal, Popconfirm } from 'antd';
+import { Row, Col, Table, Tag, Button, List, Switch, message, Modal, Popconfirm, Skeleton } from 'antd';
 import moment from 'moment';
 
 import api from '../../services'
 import connect from './connect';
 import SearchForm from './components/SearchForm';
 import AddNewForm from './components/AddNewForm';
-
+const {CopyToClipboard} = require('react-copy-to-clipboard');
 
 
 class License extends React.Component<any> {
@@ -22,6 +22,7 @@ class License extends React.Component<any> {
       data: [] as any[],
       fetching: false,
       expandedRowKeys: new Set<string>(),
+      fetchingRowKeys: new Set<string>(),
       visibleRowKeys: new Set<string>(),
       query: {
         paging: {
@@ -35,23 +36,29 @@ class License extends React.Component<any> {
   };
 
   fetchTableData = async () => {
-    let data = await api.license.fetch(this.state.table.query);
     this.setState(update(this.state, {
       table: {
-        data: { $set: data },
-        fetching: { $set: true }
+        fetching: { $set: true },
+        expandedRowKeys: { $set: new Set<string>() }
       }
-    }), () => {
+    }), async () => {
+      let data = await api.license.fetch(this.state.table.query);
       this.setState(update(this.state, {
         table: {
+          data: { $set: data },
           fetching: { $set: false }
         }
       }));
-    })
+    });
+    
   }
 
   componentDidMount() {
     this.fetchTableData();
+  }
+
+  handleCopy = (record: any) => {
+
   }
   
   meta = [
@@ -62,8 +69,11 @@ class License extends React.Component<any> {
         let visible = this.state.table.visibleRowKeys.has(record.key);
         return (
           <>
-            {visible?text:(('#'.repeat(8)+'-').repeat(3) + text.slice(-8))}　
-            <a href="#n" onClick={()=>this.handleToggleKeyVisible(record)}><Icon type={visible?'eye-invisible':'eye'} /></a>
+            <span style={{minWidth:280, display: 'inline-block'}}>{visible?text:(('#'.repeat(8)+'-').repeat(3) + text.slice(-8))}</span>　
+            <Button style={{marginRight:5}} shape="circle" size="small" icon={!visible?'eye-invisible':'eye'} onClick={()=>this.handleToggleKeyVisible(record)}/>
+            <CopyToClipboard text={text} onCopy={()=>message.success('クリップボードにコピー。')}>
+              <Button shape="circle" size="small" icon="copy" />
+            </CopyToClipboard>
           </>
         );
       },
@@ -94,7 +104,7 @@ class License extends React.Component<any> {
       render: (text: any, record: any) => (
         <>
           <Tag color={record.type === 1 ? 'geekblue' : 'green'}>
-            {({1:'個人', 2:'法人'} as any) [record.type]}
+            {({1:'個人', 2:'法人'} as any)[record.type]}
           </Tag>
           {text}
         </>
@@ -125,6 +135,7 @@ class License extends React.Component<any> {
   ];
 
   handleExpand = async (record: any) => {
+
     let oldExpands = this.state.table.expandedRowKeys as Set<string>;
     let collapsed = oldExpands.has(record.key);
     collapsed 
@@ -139,7 +150,7 @@ class License extends React.Component<any> {
       }
     }));
 
-    if(!collapsed) {
+    if(!collapsed && !record.devices) {
       let data = await api.device.fetch({
         license_key: record.key
       });
@@ -255,11 +266,30 @@ class License extends React.Component<any> {
     }), this.fetchTableData);
   }
 
+  renderDevicesSkeleton = () => <Row style={{ width: '100%' }}>
+    <Col span={10}><Skeleton active={true} loading={true} title={false} paragraph={{rows:2, width: ['80%', '80%']}}/></Col>
+    <Col span={10}><Skeleton active={true} loading={true} title={false} paragraph={{rows:2, width: ['80%', '80%']}}/></Col>
+    <Col span={4}>
+      <div style={{float:'right', width: '80%'}}><Skeleton active={true} loading={true} title={false} paragraph={{rows:2, width: ['100%', '100%']}}/></div>
+    </Col>
+  </Row>
+
+  // renderTableSkeleton = () => <Row style={{ width: '100%' }}>
+  //   <Col span={4}><Skeleton active={true} loading={true} title={false} paragraph={{rows:5, width: ['80%', '80%']}}/></Col>
+  //   <Col span={4}><Skeleton active={true} loading={true} title={false} paragraph={{rows:5, width: ['80%', '80%']}}/></Col>
+  //   <Col span={4}><Skeleton active={true} loading={true} title={false} paragraph={{rows:5, width: ['80%', '80%']}}/></Col>
+  //   <Col span={4}><Skeleton active={true} loading={true} title={false} paragraph={{rows:5, width: ['80%', '80%']}}/></Col>
+  //   <Col span={4}><Skeleton active={true} loading={true} title={false} paragraph={{rows:5, width: ['80%', '80%']}}/></Col>
+  //   <Col span={4}>
+  //     <div style={{float:'right', width: '80%'}}><Skeleton active={true} loading={true} title={false} paragraph={{rows:10, width: ['100%', '100%']}}/></div>
+  //   </Col>
+  // </Row>
+
   render() {
     let insertPending = this.props.insert.status === 'pending';
     let { table, modal } = this.state;
     let rowKeys = Array.from(table.expandedRowKeys);
-
+    console.log('table', table)
     return (
       <Row>
         <Col span={24}>
@@ -270,6 +300,7 @@ class License extends React.Component<any> {
             <SearchForm onFilterChange={this.handleOnFilterChange}/>
           </Row>
           <div className="search-result-list">
+            {
             <Table 
               dataSource={table.data} 
               pagination={table.pagination}
@@ -280,8 +311,10 @@ class License extends React.Component<any> {
               expandedRowKeys={rowKeys}
               expandIconAsCell={false}
               expandIcon={()=><></>}
+              
               expandedRowRender={record => 
-                <List
+                (record.devices && record.devices.length) 
+                ? <List
                   size="small"
                   dataSource={record.devices}
                   renderItem={(item : any, key) => (
@@ -299,8 +332,9 @@ class License extends React.Component<any> {
                       </List.Item>
                     )}
                 />
+                : this.renderDevicesSkeleton()
                }
-            />
+            />}
           </div>
         </Col>
 
