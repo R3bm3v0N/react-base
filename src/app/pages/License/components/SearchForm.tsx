@@ -15,6 +15,7 @@ class SearchForm extends React.Component<any, any> {
   constructor(props: any) {
     super(props);
     this.triggerFilterNow = debounce(this.triggerFilterNow, 500);
+    // this.handleFilterOnChangeName = debounce(this.handleFilterOnChangeName, 500);
   }
 
   handleSearch = (e: any) => {
