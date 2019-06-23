@@ -1,4 +1,4 @@
 export default {
   debug: false,
-  apiBaseURL: 'http://localhost:5000'
+  apiBaseURL: 'https://e-msg.biz:8087'
 }
