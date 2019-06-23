@@ -1,7 +1,9 @@
 import * as React from "react";
 import { Layout, Menu, Breadcrumb, Icon } from 'antd';
+import './Basic.css';
 
 const { Header, Content, Sider } = Layout;
+
 
 // interface Props {
 // }
@@ -19,9 +21,9 @@ class BasicLayout extends React.Component<any, any> {
 
   render() {
     return (
-      <Layout>
+      <Layout className="layout-basic">
         <Sider width={200} trigger={null} collapsible collapsed={this.state.collapsed}>
-            <div className="logo">
+            <div className="ant-pro-sider-menu-logo logo">
               {/* <img src="https://via.placeholder.com/150x50"/> */}
             </div>
 

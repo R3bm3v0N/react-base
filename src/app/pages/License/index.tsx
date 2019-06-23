@@ -1,6 +1,6 @@
 import * as React from "react";
 import update from 'immutability-helper';
-import { Row, Col, Table, Tag, Button, List, Switch, message, Modal, Popconfirm, Skeleton, Pagination } from 'antd';
+import { Row, Col, Table, Tag, Button, List, Switch, message, Modal, Popconfirm, Skeleton, Card, Tabs } from 'antd';
 import moment from 'moment';
 
 import api from '../../services'
@@ -26,7 +26,7 @@ class License extends React.Component<any> {
         },
         sort: {
           column: undefined,
-          direction: undefined
+          order: undefined
         },
         filters: {}
       },
@@ -39,28 +39,41 @@ class License extends React.Component<any> {
   };
 
   fetchTableData = async () => {
+    // if(this.state.table.fetching) return;
+
     this.setState(update(this.state, {
       table: {
         fetching: { $set: true },
         expandedRowKeys: { $set: new Set<string>() }
       }
     }), async () => {
-      let payload = await api.license.fetch({
-        ...this.state.table.meta
-      });
-      this.setState(update(this.state, {
-        table: {
-          meta: {
-            page: {
-              total: {
-                $set: payload.meta.total
+      try {
+        let payload = await api.license.fetch({
+          ...this.state.table.meta
+        });
+        this.setState(update(this.state, {
+          table: {
+            meta: {
+              page: {
+                total: {
+                  $set: payload.meta.total
+                }
               }
-            }
-          },
-          data: { $set: payload.data },
-          fetching: { $set: false }
-        }
-      }));
+            },
+            data: { $set: payload.data },
+            fetching: { $set: false }
+          }
+        }));
+      } catch(error) {
+        message.destroy();
+        message.error(<>{error.message} <Button type="link" style={{padding: 0}} onClick={()=>{message.destroy(); this.fetchTableData()}}>再試行する</Button></>, 0)
+        this.setState(update(this.state, {
+          table: {
+            fetching: { $set: false }
+          }
+        }));
+      }
+      
     });
     
   }
@@ -98,6 +111,7 @@ class License extends React.Component<any> {
           {moment(text).format('Y/MM/DD')}
         </>
       ),
+      sorter: true
     },
     
     {
@@ -108,19 +122,21 @@ class License extends React.Component<any> {
           {moment(text).format('Y/MM/DD')}
         </>
       ),
+      sorter: true
     },
     
     {
       title: 'お客様名',
-      dataIndex: 'name',
+      dataIndex: 'user_name',
       render: (text: any, record: any) => (
         <>
-          <Tag color={record.type === 1 ? 'geekblue' : 'green'}>
-            {({1:'個人', 2:'法人'} as any)[record.type]}
+          <Tag color={record.user_type === 1 ? 'geekblue' : 'green'}>
+            {({1:'個人', 2:'法人'} as any)[record.user_type]}
           </Tag>
           {text}
         </>
       ),
+      sorter: true
     },
   
     {
@@ -132,6 +148,7 @@ class License extends React.Component<any> {
         件　
         {record.device_count > 0 && <span className={`ant-table-row-expand-icon ant-table-row-${this.state.table.expandedRowKeys.has(record.key) ? 'expanded' : 'collapsed'}`} onClick={()=>this.handleExpand(record)}/> }
       </>,
+      sorter: true
     },
   
     {
@@ -263,24 +280,20 @@ class License extends React.Component<any> {
             }
           },
           sort: {
-            $set: sorter
+            $set: {
+              column: sorter.columnKey,
+              order: sorter.order
+            }
           },
-          filters: {
-            $set: filters
-          }
+          // filters: {
+          //   $set: filters
+          // }
         }
       }
-    }))
-  //   this.setState({
-  //     query : {
-  //       paging: {
-  //         limit: pagination.pageSize,
-  //         page: pagination.current,
-  //         sort: (sorter.order === 'ascend' ? '' : '-') + sorter.field
-  //       },
-  //       filters,
-  //     }
-  //   }, this.fetchTableData);
+    }), () => {
+      console.log(sorter);
+      this.fetchTableData();
+    })
   };
 
   handleOnFilterChangePrepare = () => {
@@ -305,23 +318,23 @@ class License extends React.Component<any> {
     }), this.fetchTableData);
   }
 
-  handleOnPageChange = (page: number, pageSize?: number) => {
-    console.log('page', page, pageSize)
-    this.setState(update(this.state, {
-      table: {
-        meta: {
-          page: {
-            current: {
-              $set: page
-            },
-            size: {
-              $set: pageSize || 0
-            }
-          }
-        }
-      }
-    }), this.fetchTableData);
-  }
+  // handleOnPageChange = (page: number, pageSize?: number) => {
+  //   console.log('page', page, pageSize)
+  //   this.setState(update(this.state, {
+  //     table: {
+  //       meta: {
+  //         page: {
+  //           current: {
+  //             $set: page
+  //           },
+  //           size: {
+  //             $set: pageSize || 0
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }), this.fetchTableData);
+  // }
 
   renderDevicesSkeleton = () => <Row style={{ width: '100%' }}>
     <Col span={10}><Skeleton active={true} loading={true} title={false} paragraph={{rows:2, width: ['80%', '80%']}}/></Col>
@@ -342,7 +355,7 @@ class License extends React.Component<any> {
         <Col span={24}>
           <Row>
             <Button icon='plus' onClick={this.showModal} type="primary" style={{ marginBottom: 16, float: 'right' }}>
-            新規追加
+            新規
             </Button>
             <SearchForm onFilterChangePrepare={this.handleOnFilterChangePrepare} onFilterChange={this.handleOnFilterChange}/>
           </Row>
@@ -359,8 +372,8 @@ class License extends React.Component<any> {
                 // showQuickJumper: true,
                 style: { width: '100%', textAlign: 'right'},
                 showTotal: (total: number, range: [number, number]) => <div>総アイテム数：{total} (表示{range.join('〜')})</div>,
-                onChange: this.handleOnPageChange,
-                onShowSizeChange: this.handleOnPageChange,
+                // onChange: this.handleOnPageChange,
+                // onShowSizeChange: this.handleOnPageChange,
               }}
               rowKey={record => record.key}
               loading={table.fetching}
@@ -397,8 +410,8 @@ class License extends React.Component<any> {
 
         <Modal
           visible={modal.visible}
-          title="新規ライセンスキーを追加"
-          okText="追加"
+          title="ライセンスキー新規作成"
+          okText="作成"
           onCancel={this.hideModal}
           onOk={this.handleCreate}
           confirmLoading={insertPending}

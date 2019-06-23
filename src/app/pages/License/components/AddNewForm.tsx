@@ -23,7 +23,7 @@ const AddNewForm = Form.create<any>({ name: 'form_in_modal' })(
 
     constructor(props: any) {
       super(props);
-      this.checkCustomerEmail = debounce(this.checkCustomerEmail, 800);
+      this.handleLoadCustomer = debounce(this.handleLoadCustomer, 500);
     }
 
     handleGenerateNewKey = () => {
@@ -87,36 +87,38 @@ const AddNewForm = Form.create<any>({ name: 'form_in_modal' })(
               `${value}@yahoo.co.jp`,
             ],
       }, ()=> {
-        if(value) {
-          this.checkCustomerEmail(value);
-        } else {
-          this.setState({
-            customerEmailValidateStatus: '',
-            customerEmailValidateError: ''
-          })
-        }
+        // if(value) {
+        //   this.checkCustomerEmail(value);
+        // } else {
+        //   this.setState({
+        //     customerEmailValidateStatus: '',
+        //     customerEmailValidateError: ''
+        //   })
+        // }
       });
     }
 
-    checkCustomerEmail = (email: string) => {
-      // customerEmailValidateStatus: value ? 'validating' : '',
+    checkCustomerEmail = async (rule: any, email: any, callback: any)  => {
+      console.log({rule, email, callback})
+      let exists = await api.user.checkEmail(email);
       
-      try {
-        this.setState({
-          customerEmailValidateStatus: 'validating',
-        }, async () => {
-          let exists = await api.user.checkEmail(email);
-          this.setState({
-            customerEmailValidateStatus: exists ? 'error' : 'success',
-            customerEmailValidateError: exists ? 'メールが存在します。' : ''
-          });
-        });
-      } catch(error) {
-        this.setState({
-          customerEmailValidateStatus: 'error',
-          customerEmailValidateError: error.message
-        }, () => message.error(error.message))
-      }
+      callback(exists ? [new Error('メールが存在します。')] : []);
+      // try {
+      //   this.setState({
+      //     customerEmailValidateStatus: 'validating',
+      //   }, async () => {
+      //     let exists = await api.user.checkEmail(email);
+      //     this.setState({
+      //       customerEmailValidateStatus: exists ? 'error' : 'success',
+      //       customerEmailValidateError: exists ? 'メールが存在します。' : ''
+      //     });
+      //   });
+      // } catch(error) {
+      //   this.setState({
+      //     customerEmailValidateStatus: 'error',
+      //     customerEmailValidateError: error.message
+      //   }, () => message.error(error.message))
+      // }
     }
 
     // componentWillUnmount() {
@@ -180,7 +182,7 @@ const AddNewForm = Form.create<any>({ name: 'form_in_modal' })(
 
           {
           this.state.customerId === 'null' &&
-          <Form.Item style={{padding: 10, background: '#ebebeb', borderRadius: 4}}>
+          <Form.Item style={{padding: 10, background: '#efefef', borderRadius: 4}}>
             <Form.Item label="お客様名">
               {getFieldDecorator('customerName', {
                 rules: [{ required: true, message: '入力してください。' }],
@@ -193,14 +195,16 @@ const AddNewForm = Form.create<any>({ name: 'form_in_modal' })(
               />)}
             </Form.Item>
             <Form.Item label="お客様のメールアドレス"
-            hasFeedback
-            validateStatus={this.state.customerEmailValidateStatus}
-            help={this.state.customerEmailValidateError}
+            // hasFeedback
+            // validateStatus={this.state.customerEmailValidateStatus}
+            // help={this.state.customerEmailValidateError}
             >
               {getFieldDecorator('customerEmail', {
                 rules: [
                   { required: true, message: '入力してください。' },
-                  { required: true, message: '入力してください。' },
+                  {
+                    validator: this.checkCustomerEmail
+                  },
                 ],
               })(<AutoComplete
                 disabled={insertPending} 

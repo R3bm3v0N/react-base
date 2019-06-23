@@ -1,6 +1,11 @@
 import * as React from "react";
 import { render } from "react-dom";
 import App from './app';
+import {message} from 'antd';
+
+message.config({
+  maxCount: 1,
+});
 
 import fs from 'fs';
 import deepmerge from 'deepmerge';
