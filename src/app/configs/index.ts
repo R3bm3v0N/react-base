@@ -1,13 +1,9 @@
-const merge = require('deepmerge'); // https://github.com/webpack/webpack/issues/6584
-
 export type Config = {
   debug?: boolean,
   apiBaseURL?: string
 }
 
-const defaultConfigs : Config = {
-
-}
-console.log('process.env',process.env)
-export default merge(defaultConfigs, require(`./${process.env.REACT_APP_NODE_ENV}`).default) as Config;
-
+export default {
+  debug: process.env.REACT_APP_DEBUG,
+  apiBaseURL: process.env.REACT_APP_API_BASE_URL,
+} as Config;
