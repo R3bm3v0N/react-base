@@ -29,7 +29,7 @@ const sessionDefaultState : SessionState = {
 const sessionReducer = createReducer(sessionDefaultState, (handleAction) => [
   handleAction(loginSuccess, (state, { payload } : any) => {
     let cookies = new Cookies();
-    cookies.set('jwt', payload.jwt, { path: '/' , httpOnly: true, });
+    cookies.set('jwt', payload.jwt, { path: '/' , httpOnly: false, });
     return ({
       jwt: payload.jwt,
       email: payload.email,

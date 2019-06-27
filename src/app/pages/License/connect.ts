@@ -4,6 +4,7 @@ import { bindActionCreators } from 'redux';
 import { State } from '../../rootReducer';
 
 const mapStateToProps = (state : State, ownProps: any) => ({
+  state,
   fetch: state.page.license.fetch,
   insert: state.page.license.insert 
 })

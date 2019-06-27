@@ -345,6 +345,7 @@ class License extends React.Component<any> {
   </Row>
 
   render() {
+    console.log('this.props', this.props)
     let insertPending = this.props.insert.status === 'pending';
     let { table, modal } = this.state;
     let rowKeys = Array.from(table.expandedRowKeys);

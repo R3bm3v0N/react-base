@@ -10,7 +10,8 @@ if(configs.debug) {
 const instance = axios.create({
   baseURL: configs.apiBaseURL,
   timeout: 60000,
-  headers: {'Authentication': new Cookies().get('jwt')}
+  headers: {'Authentication': new Cookies().get('jwt')},
+  // withCredentials: true
 });
 
 instance.interceptors.response.use(function (response) {

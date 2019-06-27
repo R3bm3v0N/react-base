@@ -1,8 +1,13 @@
 import * as React from "react";
-import { Layout, Menu, Breadcrumb, Icon } from 'antd';
+import { Layout, Menu, Breadcrumb, Icon, Avatar, Badge } from 'antd';
 import './Basic.css';
+import Cookies from 'universal-cookie';
+import {withRouter} from 'react-router-dom';
+import { connect } from 'react-redux';
+import {State} from '../rootReducer';
 
 const { Header, Content, Sider } = Layout;
+const { SubMenu } = Menu;
 
 
 // interface Props {
@@ -19,7 +24,15 @@ class BasicLayout extends React.Component<any, any> {
     });
   };
 
+  logout = () => {
+    let cookies = new Cookies();
+    cookies.remove('jwt');
+    // this.props.history.push('/');
+    window.location.reload();
+  }
+
   render() {
+    console.log('this.props', this.props)
     return (
       <Layout className="layout-basic">
         <Sider width={200} trigger={null} collapsible collapsed={this.state.collapsed}>
@@ -46,6 +59,33 @@ class BasicLayout extends React.Component<any, any> {
               type={this.state.collapsed ? 'menu-unfold' : 'menu-fold'}
               onClick={this.toggle}
             />
+            <Menu
+              mode="horizontal"
+              defaultSelectedKeys={['2']}
+              selectable={false}
+              style={{ lineHeight: '64px', float: 'right', marginRight: 24}}
+              overflowedIndicator={<></>}
+            >
+              <SubMenu
+                title={
+                  <>
+                    <Avatar size={24} 
+                      icon="user"
+                      src="https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png" 
+                      // style={{border: '1px solid #444'}}
+                     />
+                    <span style={{marginLeft: 8}}>{this.props.session.userDisplayName}</span>
+                  </>
+                }
+              >
+                <Menu.Item key="user:logout" onClick={this.logout}><Icon type="logout" />Logout</Menu.Item>
+              </SubMenu>
+              {/* <Menu.Item key="3" style={{ padding: '0 15px' }}> */}
+                {/* <Badge count={'JA'} style={{ margin:0, backgroundColor: '#52c41a' }}> */}
+                  {/* <Icon type="global" style={{ margin:0, fontSize: 16 }}/> */}
+                {/* </Badge> */}
+              {/* </Menu.Item> */}
+            </Menu>
           </Header>
           <Layout style={{ padding: '0 24px 24px' }}>
             <Breadcrumb style={{ margin: '16px 0' }}>
@@ -70,4 +110,18 @@ class BasicLayout extends React.Component<any, any> {
   }
 }
 
-export default BasicLayout;
+const mapStateToProps = (state : State, ownProps: any) => ({
+  sss: state,
+  session: state.session
+})
+
+const mapDispatchToProps = null;
+// const mapDispatchToProps = (dispatch: any) => ()=>{};
+
+// const routerAware = withRouter(BasicLayout);
+const routerAware = BasicLayout;
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(routerAware);

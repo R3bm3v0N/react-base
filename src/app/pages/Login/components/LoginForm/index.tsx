@@ -21,6 +21,12 @@ class NormalLoginForm extends React.Component<any> {
     
     return (
       <Form onSubmit={this.handleSubmit} className="login-form">
+        <div style={{textAlign: 'center', marginBottom: 50}}>
+          <img
+            width={200} 
+            src="./logo.svg"
+          />
+        </div>
         {error && <Alert message={<>{error.code && <Typography.Text code>{error.code}</Typography.Text>} {error.message}</>} type="error" style={{ marginBottom: 24 }} showIcon/>}
         <Form.Item>
           {getFieldDecorator('username', {
