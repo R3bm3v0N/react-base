@@ -1405,6 +1405,21 @@
     "@types/prop-types" "*"
     csstype "^2.2.0"
 
+"@types/redux-localstorage-filter@^0.1.4":
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/@types/redux-localstorage-filter/-/redux-localstorage-filter-0.1.4.tgz#61ea7168f3ddb9bb62bffa6c27b3d89cbc8f9322"
+  integrity sha512-mbOf9gBsuXqptRNlEbmbx/RV1Wi2UI/dvApaCLS0X6YdintWljeQqmCOL0ADrJjFYgXDXMkbAzMtf+XoU0q8mg==
+  dependencies:
+    "@types/redux-localstorage" "*"
+    redux "^3.6.0"
+
+"@types/redux-localstorage@*", "@types/redux-localstorage@^1.0.8":
+  version "1.0.8"
+  resolved "https://registry.yarnpkg.com/@types/redux-localstorage/-/redux-localstorage-1.0.8.tgz#bcbf07d1451d60b2e874a47eebc02d780bce7c0d"
+  integrity sha512-pt+w3Y2K4Xwx79exTFZO356buBCgCM6NnyMv/EmASWb03a81g/EMEhNgH6w9dOnhTs1Clnmf2ykaia0FWXjsbQ==
+  dependencies:
+    redux "^3.6.0"
+
 "@types/redux-logger@3.0.7":
   version "3.0.7"
   resolved "https://registry.yarnpkg.com/@types/redux-logger/-/redux-logger-3.0.7.tgz#163f6f6865c69c21d56f9356dc8d741718ec0db0"
@@ -9322,6 +9337,16 @@ redux-immutable-state-invariant@^2.1.0:
   dependencies:
     invariant "^2.1.0"
     json-stringify-safe "^5.0.1"
+
+redux-localstorage-filter@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/redux-localstorage-filter/-/redux-localstorage-filter-0.1.1.tgz#94c5ab68d8cda479bb3cc6cdf03569f8f63a188d"
+  integrity sha1-lMWraNjNpHm7PMbN8DVp+PY6GI0=
+
+redux-localstorage@^1.0.0-rc5:
+  version "1.0.0-rc5"
+  resolved "https://registry.yarnpkg.com/redux-localstorage/-/redux-localstorage-1.0.0-rc5.tgz#7067bc4cb0b03b5c791025ac33dde6175d50d5d1"
+  integrity sha1-cGe8TLCwO1x5ECWsM93mF11Q1dE=
 
 redux-logger@3.0.6:
   version "3.0.6"

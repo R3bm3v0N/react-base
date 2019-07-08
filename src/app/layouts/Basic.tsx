@@ -35,12 +35,12 @@ class BasicLayout extends React.Component<any, any> {
     console.log('this.props', this.props)
     return (
       <Layout className="layout-basic">
-        <Sider width={200} trigger={null} collapsible collapsed={this.state.collapsed}>
+        <Sider theme="light" width={200} trigger={null} collapsible collapsed={this.state.collapsed}>
             <div className="ant-pro-sider-menu-logo logo">
-              {/* <img src="https://via.placeholder.com/150x50"/> */}
+              <img src="/logo.svg"/>
             </div>
 
-            <Menu theme="dark" mode="inline" defaultSelectedKeys={['1']}>
+            <Menu theme="light" mode="inline" defaultSelectedKeys={['1']}>
               <Menu.Item key="1">
                 <Icon type="key" />
                 <span>ライセンス管理</span>

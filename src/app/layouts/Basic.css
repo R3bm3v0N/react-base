@@ -11,7 +11,13 @@
 }
 
 .layout-basic .logo {
-  height: 32px;
-  background: rgba(255, 255, 255, 0.2);
+  /* height: 32px; */
+  background: #fff;
   margin: 16px;
+  text-align: center;
+}
+
+.layout-basic .logo img {
+  /* max-height: 100%; */
+  max-width: 80%;
 }

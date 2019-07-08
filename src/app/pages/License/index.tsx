@@ -144,7 +144,7 @@ class License extends React.Component<any> {
       dataIndex: 'device_count',
       render: (text: any, record: any) => 
       <>
-        {record.device_count} 
+        {record.device_count}/{record.max_client} 
         件　
         {record.device_count > 0 && <span className={`ant-table-row-expand-icon ant-table-row-${this.state.table.expandedRowKeys.has(record.key) ? 'expanded' : 'collapsed'}`} onClick={()=>this.handleExpand(record)}/> }
       </>,
@@ -391,7 +391,7 @@ class License extends React.Component<any> {
                   renderItem={(item : any, key) => (
                     <List.Item key={key}>
                       <Row style={{width:'100%'}}>
-                        <Col span={10}>{key + 1}.&nbsp;{item.info}</Col>
+                        <Col span={10} style={{overflow: 'auto'}}>{key + 1}.&nbsp;{item.info}</Col>
                         <Col span={10}>{item.id}</Col>
                         <Col span={4}>
                           <span style={{float:'right'}}>

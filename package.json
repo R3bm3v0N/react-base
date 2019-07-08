@@ -6,6 +6,8 @@
   "keywords": [],
   "main": "index.ts",
   "dependencies": {
+    "@types/redux-localstorage": "^1.0.8",
+    "@types/redux-localstorage-filter": "^0.1.4",
     "antd": "3.19.3",
     "axios": "0.19.0",
     "axios-debug-log": "0.6.1",
@@ -28,6 +30,8 @@
     "react-router-dom": "5.0.1",
     "react-scripts": "3.0.1",
     "redux": "4.0.1",
+    "redux-localstorage": "^1.0.0-rc5",
+    "redux-localstorage-filter": "^0.1.1",
     "redux-logger": "3.0.6",
     "redux-observable": "1.1.0",
     "reselect": "4.0.0",
