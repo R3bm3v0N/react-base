@@ -15,7 +15,8 @@ const {CopyToClipboard} = require('react-copy-to-clipboard');
 class License extends React.Component<any> {
   state = { 
     modal: {
-      visible: false
+      visible: false,
+      licenseKey: undefined
     },
     table: {
       meta: {
@@ -35,6 +36,8 @@ class License extends React.Component<any> {
       expandedRowKeys: new Set<string>(),
       fetchingRowKeys: new Set<string>(),
       visibleRowKeys: new Set<string>(),
+      fetchingUpdateRowKeys: new Set<string>(),
+      fetchUpdateData: undefined
     }
   };
 
@@ -161,7 +164,61 @@ class License extends React.Component<any> {
         </Popconfirm>
       ),
     },
+
+    {
+      title: '変更',
+      dataIndex: 'edit',
+      render: (text: any, record: any) => (
+        <Button loading={this.state.table.fetchingUpdateRowKeys.has(record.key)} shape="circle" size="small" icon="edit" onClick={e => this.showModalEdit(record.key)}/>
+      ),
+    },
   ];
+
+  showModalEdit = (key: any) => {
+    let { fetchingUpdateRowKeys } = this.state.table;
+    fetchingUpdateRowKeys.add(key);
+    this.setState(update(this.state, {
+      table: {
+        fetchingUpdateRowKeys: {
+          $set: fetchingUpdateRowKeys
+        }
+      }
+    }), async () => {
+      try {
+        fetchingUpdateRowKeys.delete(key);
+        let payload = await api.license.fetch({ filters: {key} });
+
+        let data = payload.data[0];
+        if (data) {
+          this.setState(update(this.state, {
+            table: {
+              fetchingUpdateRowKeys: {
+                $set: fetchingUpdateRowKeys
+              },
+              fetchUpdateData: {
+                $set: data
+              }
+            },
+            modal: {
+              visible: {
+                $set: true
+              }
+            }
+          }));
+        } else {
+          alert('ERROR')
+        }
+      } catch(error) {
+        this.setState(update(this.state, {
+          table: {
+            fetchingUpdateRowKeys: {
+              $set: fetchingUpdateRowKeys
+            }
+          }
+        }));
+      }
+    });
+  }
 
   handleExpand = async (record: any) => {
 
@@ -216,13 +273,23 @@ class License extends React.Component<any> {
     }));
   }
 
-  showModal = () => {
+  showModalAdd = () => {
+    const form = this.addNewForm;
+    form.current && form.current.resetFields();
     this.setState(update(this.state, {
       modal: {
         visible: {
           $set: true,
+        },
+      },
+      table: {
+        fetchingUpdateRowKeys: {
+          $set: new Set<string>()
+        },
+        fetchUpdateData: {
+          $set: undefined
         }
-      } 
+      }
     }));
   };
 
@@ -239,14 +306,37 @@ class License extends React.Component<any> {
   addNewForm = React.createRef<any>();
   handleCreate = () => {
     const form = this.addNewForm;
-    form.current.validateFields((err: any, values: any) => {
+    const { table} = this.state;
+    form.current.validateFields(async (err: any, values: any) => {
       if (err) {
         return;
       }
       if(values.customerId === 'null') {
         values.customerId = null;
       }
-      this.props.insert(values);
+      if (table.fetchUpdateData) {
+        try {
+          let payload = await api.license.update(values);
+          message.success('データを変更した。');
+          form.current.resetFields();
+          this.hideModal();
+          this.fetchTableData();
+        } catch(error) {
+          message.error(error.message);
+        }
+
+      } else {
+        // this.props.insert(values);
+        try {
+          let payload = await api.license.insert(values);
+          message.success('データを追加した。');
+          form.current.resetFields();
+          this.hideModal();
+          this.fetchTableData();
+        } catch (error) {
+          message.error(error.message);
+        }
+      }
     });
   };
 
@@ -255,16 +345,16 @@ class License extends React.Component<any> {
   // };
 
   componentDidUpdate(prevProps: any) {
-    const form = this.addNewForm;
-    if(prevProps.insert.status === 'pending') {
-      if(this.props.insert.status === 'success') {
-        message.success('データを追加した。');
-        form.current.resetFields();
-        this.hideModal();
-      } else {
-        message.error('データの追加に失敗しました。');
-      }
-    }
+    // const form = this.addNewForm;
+    // if(prevProps.insert.status === 'pending') {
+    //   if(this.props.insert.status === 'success') {
+    //     message.success('データを追加した。');
+    //     form.current.resetFields();
+    //     this.hideModal();
+    //   } else {
+    //     message.error('データの追加に失敗しました。');
+    //   }
+    // }
   };
 
   handleTableChange = (pagination: any, filters: any, sorter: any) => {
@@ -355,7 +445,7 @@ class License extends React.Component<any> {
       <Row>
         <Col span={24}>
           <Row>
-            <Button icon='plus' onClick={this.showModal} type="primary" style={{ marginBottom: 16, float: 'right' }}>
+            <Button icon='plus' onClick={this.showModalAdd} type="primary" style={{ marginBottom: 16, float: 'right' }}>
             新規
             </Button>
             <SearchForm onFilterChangePrepare={this.handleOnFilterChangePrepare} onFilterChange={this.handleOnFilterChange}/>
@@ -391,7 +481,8 @@ class License extends React.Component<any> {
                   renderItem={(item : any, key) => (
                     <List.Item key={key}>
                       <Row style={{width:'100%'}}>
-                        <Col span={10} style={{overflow: 'auto'}}>{key + 1}.&nbsp;{item.info}</Col>
+                        <Col span={10} dangerouslySetInnerHTML={{
+                          __html: this.renderDeviceInfoHtml(key, item) }} style={{ overflow: 'auto' }}/>
                         <Col span={10}>{item.id}</Col>
                         <Col span={4}>
                           <span style={{float:'right'}}>
@@ -411,8 +502,8 @@ class License extends React.Component<any> {
 
         <Modal
           visible={modal.visible}
-          title="ライセンスキー新規作成"
-          okText="作成"
+          title={`ライセンスキー${table.fetchUpdateData ? '変更' : '新規作成'}`}
+          okText={table.fetchUpdateData ? `変更` : `作成`}
           onCancel={this.hideModal}
           onOk={this.handleCreate}
           confirmLoading={insertPending}
@@ -423,10 +514,39 @@ class License extends React.Component<any> {
           <AddNewForm
             ref={this.addNewForm}
             insertPending={this.props.insert.status === 'pending'}
+            fetchPending={this.props.fetch.status === 'pending'}
+            initData={table.fetchUpdateData}
           />
         </Modal>
       </Row>
     );
+  }
+  renderDeviceInfoHtml(key: number, item: any): string {
+    let num = key + 1;
+    return '<div style="max-height: 100px; overflow-y:auto"><table width="100%"><tr>' + (() => {
+      let obj = JSON.parse(item.info);
+      return Object.entries(obj).map(([key, val], idx) => `<tr><td width="20px">${idx === 0 ? num : ''}</td><td width="150px">${this.translate(key)}</td><td>${val}</td></tr>`).join('');
+    })() + '</tr></table></div>';
+  }
+  translate(key: string) {
+    return ({
+      brand: 'ブランド',
+      buildId: 'ビルドID',
+      cpuAbi: 'CPU Abi',
+      cpuAbi2: 'CPU Abi 2',
+      device: 'デバイス',
+      display: '表示',
+      hardware: 'ハードウェア',
+      host: 'ホスト',
+      manufacturer: 'メーカー',
+      modelAndProduct: 'モデルと製品',
+      osApiLevel: 'OS API レベル',
+      osVersion: 'OS バージョン',
+      release: 'リリース',
+      serial: 'シリアル',
+      unknown: 'Unknown',
+      user: 'ユーザー',
+    } as any)[key] ;
   }
 }
 

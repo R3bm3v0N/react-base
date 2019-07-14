@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { AutoComplete, Tooltip, Form, Input, InputNumber, Icon, DatePicker, Switch, Select, Typography, message, Button} from 'antd';
+import { AutoComplete, Tooltip, Form, Input, InputNumber, Icon, DatePicker, Switch, Select, Typography, message, Button, Row, Col} from 'antd';
 import debounce from 'lodash/debounce';
-import api from '../../../services'
-import './AddNewForm.css';
+import moment from 'moment';
+import api from '../../../../services'
+import './index.css';
 
 const { RangePicker } = DatePicker;
 
@@ -18,7 +19,7 @@ const AddNewForm = Form.create<any>({ name: 'form_in_modal' })(
       customerSearchPending: false,
       customerEmailDataSource: [],
       customerEmailValidateStatus: undefined,
-      customerEmailValidateError: undefined
+      customerEmailValidateError: undefined,
     };
 
     constructor(props: any) {
@@ -87,14 +88,7 @@ const AddNewForm = Form.create<any>({ name: 'form_in_modal' })(
               `${value}@yahoo.co.jp`,
             ],
       }, ()=> {
-        // if(value) {
-        //   this.checkCustomerEmail(value);
-        // } else {
-        //   this.setState({
-        //     customerEmailValidateStatus: '',
-        //     customerEmailValidateError: ''
-        //   })
-        // }
+        
       });
     }
 
@@ -103,32 +97,13 @@ const AddNewForm = Form.create<any>({ name: 'form_in_modal' })(
       let exists = await api.user.checkEmail(email);
       
       callback(exists ? [new Error('メールが存在します。')] : []);
-      // try {
-      //   this.setState({
-      //     customerEmailValidateStatus: 'validating',
-      //   }, async () => {
-      //     let exists = await api.user.checkEmail(email);
-      //     this.setState({
-      //       customerEmailValidateStatus: exists ? 'error' : 'success',
-      //       customerEmailValidateError: exists ? 'メールが存在します。' : ''
-      //     });
-      //   });
-      // } catch(error) {
-      //   this.setState({
-      //     customerEmailValidateStatus: 'error',
-      //     customerEmailValidateError: error.message
-      //   }, () => message.error(error.message))
-      // }
     }
-
-    // componentWillUnmount() {
-    //   message.destroy();
-    // }
-
     render() {
       const { form } = this.props;
       const { getFieldDecorator } = form;
       const insertPending = this.props.insertPending as boolean;
+      const initData = this.props.initData;
+      const inEditMode = initData !== undefined;
       const options = this.state.customers.map(d => 
         <Select.Option key={d.id}>
         {d.name} - <Typography.Text type="secondary">{d.email}</Typography.Text>
@@ -142,41 +117,68 @@ const AddNewForm = Form.create<any>({ name: 'form_in_modal' })(
           <Form.Item label="ライセンスキー">
             {getFieldDecorator('key', {
               rules: [{ required: true, message: '入力してください。' }],
+              initialValue: inEditMode? initData.key : ''
             })(<Input
               readOnly
-              disabled={insertPending} 
+              disabled={insertPending || inEditMode} 
               placeholder="########-########-########-########"
-              suffix={
+              suffix={!inEditMode &&
                 <Tooltip title="新規ライセンスキーを生成する。"><Button style={{padding:0, margin:0, display: 'inline'}} type='link' disabled={insertPending || this.state.newKeyPending} onClick={this.handleGenerateNewKey}><Icon type="sync" spin={this.state.newKeyPending}/></Button></Tooltip>
               }
             />)}
           </Form.Item>
-          <Form.Item label="有効時間">
-            {getFieldDecorator('time', {
-              rules: [{ required: true, message: '入力してください。' }],
-            })(<RangePicker disabled={insertPending} style={{ width: '100%' }} />)}
-          </Form.Item>
+          
+          
+          {!inEditMode 
+            ? <Form.Item label="有効時間">
+                {getFieldDecorator('time', {
+                  rules: [{ required: true, message: '入力してください。' }],
+                })(
+                  <RangePicker disabled={insertPending} style={{ width: '100%' }} />
+                )}
+              </Form.Item>
+          : <Form.Item label="有効時間" style={{ marginBottom: 0 }}>
+              <Form.Item
+                style={{ display: 'inline-block', width: 'calc(50% - 12px)' }}
+              >
+                <DatePicker disabled defaultValue={moment(initData.created_at)} style={{ width: '100%' }}/>
+              </Form.Item>
+              <span style={{ display: 'inline-block', width: '24px', textAlign: 'center', lineHeight: '30px' }}>〜</span>
+              <Form.Item style={{ display: 'inline-block', width: 'calc(50% - 12px)' }}>
+                {getFieldDecorator('timeTo', {
+                  rules: [{ required: true, message: '入力してください。' }],
+                  initialValue: moment(initData.expire)
+                })(
+                  <DatePicker style={{ width: '100%' }} />
+                )}
+              </Form.Item>
+            </Form.Item>
+          }
+
 
           <Form.Item label="お客様">
             {getFieldDecorator('customerId', {
               rules: [{ required: true, message: '入力してください。' }],
+              initialValue: inEditMode ? (initData.user_name + ' - ' + initData.user_email) : ''
             })(
             // <Input disabled={insertPending} placeholder={'お客様名を入力してください。'} style={{ width: '100%' }} />
-            <Select
-              showSearch
-              allowClear
-              // value={this.state.value}
-              placeholder="お客様を選択してください。"
-              style={this.props.style}
-              defaultActiveFirstOption={false}
-              filterOption={false}
-              onSearch={this.handleLoadCustomer}
-              onChange={this.handleCustomerChange}
-              notFoundContent={null}
-              loading={this.state.customerSearchPending}
-            >
-              {options}
-            </Select>
+              inEditMode
+                ? <Input disabled style={{ width: '100%' }} />
+                :<Select
+                  showSearch
+                  allowClear
+                  // value={this.state.value}
+                  placeholder="お客様を選択してください。"
+                  style={this.props.style}
+                  defaultActiveFirstOption={false}
+                  filterOption={false}
+                  onSearch={this.handleLoadCustomer}
+                  onChange={this.handleCustomerChange}
+                  notFoundContent={null}
+                  loading={this.state.customerSearchPending}
+                >
+                  {options}
+                </Select>
             )}
           </Form.Item>
 
