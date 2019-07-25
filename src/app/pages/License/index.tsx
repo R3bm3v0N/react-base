@@ -1,6 +1,6 @@
 import * as React from "react";
 import update from 'immutability-helper';
-import { Row, Col, Table, Tag, Button, List, Switch, message, Modal, Popconfirm, Skeleton, Card, Tabs } from 'antd';
+import { Row, Col, Table, Tag, Button, List, Switch, message, Modal, Popconfirm, Skeleton, Alert, Icon } from 'antd';
 import moment from 'moment';
 
 import api from '../../services'
@@ -8,6 +8,7 @@ import connect from './connect';
 import SearchForm from './components/SearchForm';
 import AddNewForm from './components/AddNewForm';
 import './index.css';
+import { setState } from "../../utils/reactUtils";
 
 const {CopyToClipboard} = require('react-copy-to-clipboard');
 
@@ -16,7 +17,9 @@ class License extends React.Component<any> {
   state = { 
     modal: {
       visible: false,
-      licenseKey: undefined
+      mode: 'insert',
+      // licenseKey: undefined,
+      params: undefined
     },
     table: {
       meta: {
@@ -94,37 +97,60 @@ class License extends React.Component<any> {
       title: 'ライセンスキー',
       dataIndex: 'key',
       render: (text: any, record: any) => {
+        if (!text) return {
+          children: <Alert
+            message={<span>お顧客からのライセンス要求<span style={{ float: 'right', fontSize: '14px' }}>{moment(record.created_at).format('Y/MM/DD')}に作成されました</span></span>}
+            description={record.request_note}
+            type="warning"
+            showIcon
+            icon={<Icon type="message" />}
+          />,
+          props: {
+            colSpan: 3,
+          }
+        };
+
         let visible = this.state.table.visibleRowKeys.has(record.key);
-        return (
-          <>
-            <span style={{minWidth:280, display: 'inline-block'}}>{visible?text:(('#'.repeat(8)+'-').repeat(3) + text.slice(-8))}</span>　
-            <Button style={{marginRight:5}} shape="circle" size="small" icon={!visible?'eye-invisible':'eye'} onClick={()=>this.handleToggleKeyVisible(record)}/>
-            <CopyToClipboard text={text} onCopy={()=>message.success('クリップボードにコピー。')}>
-              <Button shape="circle" size="small" icon="copy" />
-            </CopyToClipboard>
-          </>
-        );
+        return <>
+          <span style={{ minWidth: 280, display: 'inline-block' }}>{visible ? text : (('#'.repeat(8) + '-').repeat(3) + text.slice(-8))}</span>
+          <Button style={{ marginRight: 5 }} shape="circle" size="small" icon={!visible ? 'eye-invisible' : 'eye'} onClick={() => this.handleToggleKeyVisible(record)} />
+          <CopyToClipboard text={text} onCopy={() => message.success('クリップボードにコピー。')}>
+            <Button shape="circle" size="small" icon="copy" />
+          </CopyToClipboard>
+        </>;
       },
     },
     {
       title: '開始日',
       dataIndex: 'created_at',
-      render: (text: any, record: any) => (
-        <>
-          {moment(text).format('Y/MM/DD')}
+      render: (text: any, record: any) => {
+        if (!record.key) return {
+          children: '',
+          props: {
+            colSpan: 0,
+          }
+        };
+        return <>
+          {text && moment(text).format('Y/MM/DD') || ''}
         </>
-      ),
+      },
       sorter: true
     },
     
     {
       title: '有効期限',
       dataIndex: 'expire',
-      render: (text: any, record: any) => (
-        <>
-          {moment(text).format('Y/MM/DD')}
-        </>
-      ),
+      render: (text: any, record: any) => {
+        if (!record.key) return {
+          children: '',
+          props: {
+            colSpan: 0,
+          }
+        };
+        return <>
+          {text && moment(text).format('Y/MM/DD') || ''}
+        </>;
+      },
       sorter: true
     },
     
@@ -159,8 +185,9 @@ class License extends React.Component<any> {
       dataIndex: 'enabled',
       render: (text: any, record: any) => (
         <Popconfirm title="Are you sure？" okText="Yes" cancelText="No" onConfirm={()=>{
+          console.log(record.enabled)
         }}>
-          <Switch size="small" checked={record.enabled}/>
+          <Switch size="small" checked={record.enabled === 1}/>
         </Popconfirm>
       ),
     },
@@ -169,56 +196,12 @@ class License extends React.Component<any> {
       title: '変更',
       dataIndex: 'edit',
       render: (text: any, record: any) => (
-        <Button loading={this.state.table.fetchingUpdateRowKeys.has(record.key)} shape="circle" size="small" icon="edit" onClick={e => this.showModalEdit(record.key)}/>
+        record.key
+          ? <Button loading={this.state.table.fetchingUpdateRowKeys.has(record.key + record.license_request_id)} shape="circle" size="small" icon="edit" onClick={e => this.showModal('update', record)}/>
+          : <Button loading={this.state.table.fetchingUpdateRowKeys.has(record.key + record.license_request_id)} shape="circle" size="small" icon="plus" type="danger" onClick={e => this.showModal('process_license_request', record)} />
       ),
     },
   ];
-
-  showModalEdit = (key: any) => {
-    let { fetchingUpdateRowKeys } = this.state.table;
-    fetchingUpdateRowKeys.add(key);
-    this.setState(update(this.state, {
-      table: {
-        fetchingUpdateRowKeys: {
-          $set: fetchingUpdateRowKeys
-        }
-      }
-    }), async () => {
-      try {
-        fetchingUpdateRowKeys.delete(key);
-        let payload = await api.license.fetch({ filters: {key} });
-
-        let data = payload.data[0];
-        if (data) {
-          this.setState(update(this.state, {
-            table: {
-              fetchingUpdateRowKeys: {
-                $set: fetchingUpdateRowKeys
-              },
-              fetchUpdateData: {
-                $set: data
-              }
-            },
-            modal: {
-              visible: {
-                $set: true
-              }
-            }
-          }));
-        } else {
-          alert('ERROR')
-        }
-      } catch(error) {
-        this.setState(update(this.state, {
-          table: {
-            fetchingUpdateRowKeys: {
-              $set: fetchingUpdateRowKeys
-            }
-          }
-        }));
-      }
-    });
-  }
 
   handleExpand = async (record: any) => {
 
@@ -273,79 +256,70 @@ class License extends React.Component<any> {
     }));
   }
 
-  showModalAdd = () => {
-    const form = this.addNewForm;
-    form.current && form.current.resetFields();
-    this.setState(update(this.state, {
-      modal: {
-        visible: {
-          $set: true,
-        },
-      },
-      table: {
-        fetchingUpdateRowKeys: {
-          $set: new Set<string>()
-        },
-        fetchUpdateData: {
-          $set: undefined
-        }
-      }
-    }));
-  };
+  // showModalAdd = () => {
+  //   console.log(this.modal.current)
+  //   console.log(this.modal.current)
+  //   console.log(this.modal.current.props)
 
-  hideModal = () => {
-    this.setState(update(this.state, {
-      modal: {
-        visible: {
-          $set: false,
-        }
-      } 
-    }));
-  };
+  //   this.modal.current.getForm().showModal('insert');
+  //   // const form = this.modal;
+  //   // form.current && form.current.resetFields();
+  //   // this.setState(update(this.state, {
+  //   //   table: {
+  //   //     fetchingUpdateRowKeys: {
+  //   //       $set: new Set<string>()
+  //   //     },
+  //   //     fetchUpdateData: {
+  //   //       $set: undefined
+  //   //     }
+  //   //   }
+  //   // }));
+  // };
 
-  addNewForm = React.createRef<any>();
-  handleCreate = () => {
-    const form = this.addNewForm;
-    const { table} = this.state;
-    form.current.validateFields(async (err: any, values: any) => {
-      if (err) {
-        return;
-      }
-      if(values.customerId === 'null') {
-        values.customerId = null;
-      }
-      if (table.fetchUpdateData) {
-        try {
-          let payload = await api.license.update(values);
-          message.success('データを変更した。');
-          form.current.resetFields();
-          this.hideModal();
-          this.fetchTableData();
-        } catch(error) {
-          message.error(error.message);
-        }
+  modal = React.createRef<any>();
+  // handleCreate = () => {
+  //   const form = this.modal;
+  //   const { table} = this.state;
+  //   form.current.validateFields(async (err: any, values: any) => {
+  //     if (err) {
+  //       return;
+  //     }
+  //     if(values.customerId === 'null') {
+  //       values.customerId = null;
+  //     }
 
-      } else {
-        // this.props.insert(values);
-        try {
-          let payload = await api.license.insert(values);
-          message.success('データを追加した。');
-          form.current.resetFields();
-          this.hideModal();
-          this.fetchTableData();
-        } catch (error) {
-          message.error(error.message);
-        }
-      }
-    });
-  };
+  //     if (table.fetchUpdateData) {
+  //       try {
+  //         let payload = await api.license.update(values);
+  //         message.success('データを変更した。');
+  //         form.current.resetFields();
+  //         this.hideModal();
+  //         this.fetchTableData();
+  //       } catch(error) {
+  //         message.error(error.message);
+  //       }
+
+  //     } else {
+  //       // this.props.insert(values);
+  //       try {
+  //         let payload = await api.license.insert(values);
+  //         message.success('データを追加した。');
+  //         form.current.resetFields();
+  //         this.hideModal();
+  //         this.fetchTableData();
+  //       } catch (error) {
+  //         message.error(error.message);
+  //       }
+  //     }
+  //   });
+  // };
 
   // saveFormRef = formRef => {
   //   this.formRef = formRef;
   // };
 
   componentDidUpdate(prevProps: any) {
-    // const form = this.addNewForm;
+    // const form = this.modal;
     // if(prevProps.insert.status === 'pending') {
     //   if(this.props.insert.status === 'success') {
     //     message.success('データを追加した。');
@@ -408,24 +382,6 @@ class License extends React.Component<any> {
     }), this.fetchTableData);
   }
 
-  // handleOnPageChange = (page: number, pageSize?: number) => {
-  //   console.log('page', page, pageSize)
-  //   this.setState(update(this.state, {
-  //     table: {
-  //       meta: {
-  //         page: {
-  //           current: {
-  //             $set: page
-  //           },
-  //           size: {
-  //             $set: pageSize || 0
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }), this.fetchTableData);
-  // }
-
   renderDevicesSkeleton = () => <Row style={{ width: '100%' }}>
     <Col span={10}><Skeleton active={true} loading={true} title={false} paragraph={{rows:2, width: ['80%', '80%']}}/></Col>
     <Col span={10}><Skeleton active={true} loading={true} title={false} paragraph={{rows:2, width: ['80%', '80%']}}/></Col>
@@ -434,9 +390,74 @@ class License extends React.Component<any> {
     </Col>
   </Row>
 
+  // Modal - START
+  hideModal = () => {
+    setState(this, update(this.state, {
+      modal: {
+        visible: { $set: false }
+      }
+    }))
+  }
+
+  showModal = async (mode: 'insert' | 'update' | 'process_license_request', params: any = undefined) => {
+    if (mode === 'update' || mode === 'process_license_request') {
+      let { fetchingUpdateRowKeys } = this.state.table;
+
+      let rowKey = params.key + params.license_request_id;
+      console.log(rowKey)
+
+      // loading icon - on
+      fetchingUpdateRowKeys.add(rowKey);
+      await setState(this, update(this.state, {
+        table: {
+          fetchingUpdateRowKeys: {
+            $set: fetchingUpdateRowKeys
+          }
+        }
+      }));
+
+      try {
+        let data;
+        if (mode === 'update') {
+          [data] = await api.license.get(params.key);
+        } else {
+          [data] = await api.licenseRequest.get(params.license_request_id);
+        }
+
+        await setState(this, update(this.state, {
+          table: {
+            fetchUpdateData: {
+              $set: data
+            }
+          },
+        }))
+        
+      } catch (error) {
+        message.error(error.message);
+      }
+
+      // loading icon - off
+      fetchingUpdateRowKeys.delete(rowKey);
+      await setState(this, update(this.state, {
+        table: {
+          fetchingUpdateRowKeys: {
+            $set: fetchingUpdateRowKeys
+          }
+        }
+      }));
+    }
+
+    setState(this, update(this.state, {
+      modal: {
+        visible: { $set: true },
+        mode: { $set: mode },
+        params: { $set: params }
+      }
+    }))
+  }
+  // Modal - END
+
   render() {
-    console.log('this.props', this.props)
-    let insertPending = this.props.insert.status === 'pending';
     let { table, modal } = this.state;
     let rowKeys = Array.from(table.expandedRowKeys);
     let {current, size: pageSize, total} = table.meta.page;
@@ -445,7 +466,7 @@ class License extends React.Component<any> {
       <Row>
         <Col span={24}>
           <Row>
-            <Button icon='plus' onClick={this.showModalAdd} type="primary" style={{ marginBottom: 16, float: 'right' }}>
+            <Button icon='plus' onClick={e=>this.showModal('insert')} type="primary" style={{ marginBottom: 16, float: 'right' }}>
             新規
             </Button>
             <SearchForm onFilterChangePrepare={this.handleOnFilterChangePrepare} onFilterChange={this.handleOnFilterChange}/>
@@ -500,27 +521,30 @@ class License extends React.Component<any> {
           </div>
         </Col>
 
-        <Modal
-          visible={modal.visible}
-          title={`ライセンスキー${table.fetchUpdateData ? '変更' : '新規作成'}`}
-          okText={table.fetchUpdateData ? `変更` : `作成`}
-          onCancel={this.hideModal}
-          onOk={this.handleCreate}
-          confirmLoading={insertPending}
-          cancelButtonProps={{disabled:insertPending}}
-          closable={!insertPending}
-          maskClosable={!insertPending}
-        >
-          <AddNewForm
-            ref={this.addNewForm}
-            insertPending={this.props.insert.status === 'pending'}
-            fetchPending={this.props.fetch.status === 'pending'}
-            initData={table.fetchUpdateData}
-          />
-        </Modal>
+        {modal.visible && <AddNewForm
+          ref={this.modal}
+          mode={modal.mode}
+          params={modal.params}
+          onSubmitSuccess={this.handleModalSubmitSuccess}
+          onSubmitFailed={this.handleModalSubmitFailed}
+          onCancelBtn={this.hideModal}
+        />}
       </Row>
     );
   }
+
+  
+
+  handleModalSubmitSuccess = () => {
+    this.hideModal();
+    this.fetchTableData();
+  }
+
+  handleModalSubmitFailed = () => {
+    this.hideModal();
+    this.fetchTableData();
+  }
+
   renderDeviceInfoHtml(key: number, item: any): string {
     let num = key + 1;
     return '<div style="max-height: 100px; overflow-y:auto"><table width="100%"><tr>' + (() => {
