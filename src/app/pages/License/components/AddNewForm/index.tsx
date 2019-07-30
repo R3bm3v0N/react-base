@@ -119,14 +119,22 @@ class AddNewForm extends React.Component<any, any> {
 
   doSubmit = async (type: string) => {
     const { onSubmitSuccess, onSubmitFailed } = this.props;
-    await this.toggleInsertPending(true);
-    console.log(this.props.form)
     this.props.form.validateFields(async (err: any, values: any) => {
+      if(err) {
+        return;
+      }
       try {
-        await ({
-          'insert': api.license.insert,
-          'update': api.license.update,
-        } as any)[type](values);
+        await this.toggleInsertPending(true);
+        if ('process_license_request' !== type) {
+          await ({
+            'insert': api.license.insert,
+            'update': api.license.update,
+            
+          } as any)[type](values);
+        } else {
+          console.log('license_request_id', values)
+          await api.licenseRequest.process(values.license_request_id, values);
+        }
 
         // let data;
         // if('insert' === type) {
@@ -140,8 +148,8 @@ class AddNewForm extends React.Component<any, any> {
         message.error(error.message);
         onSubmitFailed();
       }
+      await this.toggleInsertPending(false);
     });
-    await this.toggleInsertPending(false);
   }
 
   doInsertNewLicense = () => {
@@ -153,7 +161,7 @@ class AddNewForm extends React.Component<any, any> {
   }
 
   doProcessLicenseRequest = async () => {
-    this.doSubmit('update');
+    this.doSubmit('process_license_request');
   }
 
   checkCustomerEmail = async (rule: any, email: any, callback: any) => {
@@ -162,20 +170,6 @@ class AddNewForm extends React.Component<any, any> {
 
     callback(exists ? [new Error('メールが存在します。')] : []);
   }
-
-  // showModal = (mode: 'insert' | 'update' | 'process_license_request') => {
-  //   setState(this, { 
-  //     mode,
-  //     visible: true
-  //    });
-  // }
-
-  // hideModal = () => {
-  //   setState(this, {
-  //     mode: undefined,
-  //     visible: false
-  //   });
-  // }
 
   render() {
     const { form, mode, params, onCancelBtn } = this.props;
@@ -201,6 +195,8 @@ class AddNewForm extends React.Component<any, any> {
       'process_license_request': this.doProcessLicenseRequest,
     } as any)[mode];
 
+    console.log(this.state.submitPending)
+
     return (
       <Modal
         visible={true}
@@ -220,6 +216,7 @@ class AddNewForm extends React.Component<any, any> {
           icon={<Icon type="message" />}
           style={{'marginBottom':'20px'}}
         />}
+
         <Form layout="vertical" ref={this.form}>
           <Form.Item label="ライセンスキー">
             {getFieldDecorator('key', {
@@ -235,6 +232,14 @@ class AddNewForm extends React.Component<any, any> {
             />)}
           </Form.Item>
 
+          {mode === 'process_license_request' && <Form.Item style={{display:'none'}}>
+            {getFieldDecorator('license_request_id', {
+              rules: [{ required: true, message: '入力してください。' }],
+              initialValue: params.license_request_id
+            })(
+              <Input style={{ width: '100%' }} />
+            )}
+          </Form.Item>}
 
           {mode !== 'update'
             ? <Form.Item label="有効時間">

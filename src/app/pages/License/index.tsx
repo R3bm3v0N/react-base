@@ -97,7 +97,7 @@ class License extends React.Component<any> {
       title: 'ライセンスキー',
       dataIndex: 'key',
       render: (text: any, record: any) => {
-        if (!text) return {
+        if (!record.key) return {
           children: <Alert
             message={<span>お顧客からのライセンス要求<span style={{ float: 'right', fontSize: '14px' }}>{moment(record.created_at).format('Y/MM/DD')}に作成されました</span></span>}
             description={record.request_note}
@@ -183,23 +183,35 @@ class License extends React.Component<any> {
     {
       title: '状態',
       dataIndex: 'enabled',
-      render: (text: any, record: any) => (
-        <Popconfirm title="Are you sure？" okText="Yes" cancelText="No" onConfirm={()=>{
-          console.log(record.enabled)
-        }}>
-          <Switch size="small" checked={record.enabled === 1}/>
-        </Popconfirm>
-      ),
+      render: (text: any, record: any) => {
+        if (!record.key) return {
+          children: <Button loading={this.state.table.fetchingUpdateRowKeys.has(record.key + record.license_request_id)} shape="round" size="small" block icon="plus" type="danger" onClick={e => this.showModal('process_license_request', record)}>処理</Button>,
+          props: {
+            colSpan: 2,
+          }
+        };
+
+        return <Popconfirm title="Are you sure？" okText="Yes" cancelText="No" onConfirm={() => {
+            console.log(record.enabled)
+          }}>
+            <Switch size="small" checked={record.enabled === 1} />
+          </Popconfirm>;
+      },
     },
 
     {
       title: '変更',
       dataIndex: 'edit',
-      render: (text: any, record: any) => (
-        record.key
-          ? <Button loading={this.state.table.fetchingUpdateRowKeys.has(record.key + record.license_request_id)} shape="circle" size="small" icon="edit" onClick={e => this.showModal('update', record)}/>
-          : <Button loading={this.state.table.fetchingUpdateRowKeys.has(record.key + record.license_request_id)} shape="circle" size="small" icon="plus" type="danger" onClick={e => this.showModal('process_license_request', record)} />
-      ),
+      render: (text: any, record: any) => {
+        if (!record.key) return {
+          children: '',
+          props: {
+            colSpan: 0,
+          }
+        };
+
+        return <Button loading={this.state.table.fetchingUpdateRowKeys.has(record.key + record.license_request_id)} shape="circle" size="small" icon="edit" onClick={e => this.showModal('update', record)} />
+      },
     },
   ];
 
