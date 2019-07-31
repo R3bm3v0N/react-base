@@ -274,7 +274,7 @@ class AddNewForm extends React.Component<any, any> {
               initialValue: mode !== 'insert' ? (params.user_name + ' - ' + params.user_email) : ''
             })(
               // <Input disabled={this.state.submitPending} placeholder={'お客様名を入力してください。'} style={{ width: '100%' }} />
-              mode === 'update'
+              mode !== 'insert'
                 ? <Input disabled style={{ width: '100%' }} />
                 : <Select
                   showSearch
@@ -336,7 +336,7 @@ class AddNewForm extends React.Component<any, any> {
               {getFieldDecorator('maxClient', {
                 initialValue: mode !== 'insert' ? params.max_client : 1,
                 rules: [{ required: true, message: '入力してください。' }],
-              })(<InputNumber placeholder='最大顧客数' min={1} max={10000} />)}
+              })(<InputNumber disabled={mode ==='process_license_request'} placeholder='最大顧客数' min={1} max={10000} />)}
             </Form.Item>
             {/* <div style={{float:'right'}}> */}
             <Form.Item label="有効" labelAlign="right" className="patch-align-right"

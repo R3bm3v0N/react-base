@@ -159,8 +159,8 @@ class License extends React.Component<any> {
       dataIndex: 'user_name',
       render: (text: any, record: any) => (
         <>
-          <Tag color={record.user_type === 1 ? 'geekblue' : 'green'}>
-            {({1:'個人', 2:'法人'} as any)[record.user_type]}
+          <Tag color={record.license_type === 1 ? 'geekblue' : 'green'}>
+            {({1:'個人', 2:'法人'} as any)[record.license_type]}
           </Tag>
           {text}
         </>
@@ -175,7 +175,7 @@ class License extends React.Component<any> {
       <>
         {record.device_count}/{record.max_client} 
         件　
-        {record.device_count > 0 && <span className={`ant-table-row-expand-icon ant-table-row-${this.state.table.expandedRowKeys.has(record.key) ? 'expanded' : 'collapsed'}`} onClick={()=>this.handleExpand(record)}/> }
+        {record.device_count > 0 && <span className={`ant-table-row-expand-icon ant-table-row-${this.state.table.expandedRowKeys.has(`${record.key}_${record.license_request_id}`) ? 'expanded' : 'collapsed'}`} onClick={()=>this.handleExpand(record)}/> }
       </>,
       sorter: true
     },
@@ -216,14 +216,14 @@ class License extends React.Component<any> {
   ];
 
   handleExpand = async (record: any) => {
-
+    let rowKey = `${record.key}_${record.license_request_id}`;
     let oldExpands = this.state.table.expandedRowKeys as Set<string>;
-    let collapsed = oldExpands.has(record.key);
+    let collapsed = oldExpands.has(rowKey);
     collapsed 
-      ? oldExpands.delete(record.key)
-      : oldExpands.add(record.key);
+      ? oldExpands.delete(rowKey)
+      : oldExpands.add(rowKey);
 
-    this.setState(update(this.state, {
+    await setState(this, update(this.state, {
       table: {
         expandedRowKeys: {
           $set: oldExpands
@@ -235,21 +235,21 @@ class License extends React.Component<any> {
       let data = await api.device.fetch({
         license_key: record.key
       });
-
-      // this.state.table.data.findIndex(v=>v.key===record.key);
-
-      let idx = this.state.table.data.findIndex(v=>v.key===record.key);
-      this.setState(update(this.state, {
-        table: {
-          data: {
-            [idx] : {
-              devices: {
-                $set: data
+      
+      let idx = this.state.table.data.findIndex(v => v.key === record.key);
+      if (idx > -1) {
+        await setState(this, update(this.state, {
+          table: {
+            data: {
+              [idx] : {
+                devices: {
+                  $set: data
+                }
               }
             }
           }
-        }
-      }));
+        }));
+      }
     }
   }
 
@@ -495,11 +495,11 @@ class License extends React.Component<any> {
                 pageSizeOptions: ['5', '10', '20', '50', '100'],
                 // showQuickJumper: true,
                 style: { width: '100%', textAlign: 'right'},
-                showTotal: (total: number, range: [number, number]) => <div>総アイテム数：{total} (表示{range.join('〜')})</div>,
+                showTotal: (total: number, range: [number, number]) => <div>全件数：{total} (表示{range.join('〜')})</div>,
                 // onChange: this.handleOnPageChange,
                 // onShowSizeChange: this.handleOnPageChange,
               }}
-              rowKey={record => record.key}
+              rowKey={record => `${record.key}_${record.license_request_id}`}
               loading={table.fetching}
               columns={this.meta}
               onChange={this.handleTableChange}
