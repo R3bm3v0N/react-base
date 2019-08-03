@@ -271,7 +271,7 @@ class AddNewForm extends React.Component<any, any> {
           <Form.Item label="お客様">
             {getFieldDecorator('customerId', {
               rules: [{ required: true, message: '入力してください。' }],
-              initialValue: mode !== 'insert' ? (params.user_name + ' - ' + params.user_email) : ''
+              initialValue: mode !== 'insert' ? (params.user_id ? (params.user_name + ' - ' + params.user_email) : params.purchase_email) : ''
             })(
               // <Input disabled={this.state.submitPending} placeholder={'お客様名を入力してください。'} style={{ width: '100%' }} />
               mode !== 'insert'

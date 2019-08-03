@@ -162,7 +162,7 @@ class License extends React.Component<any> {
           <Tag color={record.license_type === 1 ? 'geekblue' : 'green'}>
             {({1:'個人', 2:'法人'} as any)[record.license_type]}
           </Tag>
-          {text}
+          {text || record.purchase_email}
         </>
       ),
       sorter: true
