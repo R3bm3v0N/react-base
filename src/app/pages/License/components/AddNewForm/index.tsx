@@ -177,7 +177,7 @@ class AddNewForm extends React.Component<any, any> {
     // const insertPending = this.props.insertPending as boolean;
     const options = this.state.customers.map(d =>
       <Select.Option key={d.id}>
-        {d.name} - <Typography.Text type="secondary">{d.email}</Typography.Text>
+        {d.name}<span className="separator"> -　</span><Typography.Text type="secondary" style={{float:'right'}}>{d.email}</Typography.Text>
       </Select.Option>
     );
     options.push(<Select.Option key={'null'}><Icon type="plus" style={{ marginRight: 5 }} />新規追加</Select.Option>);
@@ -271,7 +271,7 @@ class AddNewForm extends React.Component<any, any> {
           <Form.Item label="お客様">
             {getFieldDecorator('customerId', {
               rules: [{ required: true, message: '入力してください。' }],
-              initialValue: mode !== 'insert' ? (params.user_id ? (params.user_name + ' - ' + params.user_email) : params.purchase_email) : ''
+              initialValue: mode !== 'insert' ? (params.user_id ? (params.user_name + ' - ' + params.user_email) : (params.purchase_email || '').split(',')[0].trim()) : ''
             })(
               // <Input disabled={this.state.submitPending} placeholder={'お客様名を入力してください。'} style={{ width: '100%' }} />
               mode !== 'insert'

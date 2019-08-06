@@ -1,3 +1,7 @@
 .patch-align-right .ant-form-item-label {
   text-align: right !important;
 }
+
+.ant-select-dropdown .separator {
+  display: none;
+}
